@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dead Man's Key | Decentralized Inheritance Protocol</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── RESET ────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── VARIABLES ────────────────────────────────────────── */
+:root {
+  --bg:         #030712;
+  --bg2:        #0a1128;
+  --bg-card:    rgba(11, 19, 41, 0.55);
+  --glass:      rgba(255,255,255,0.025);
+  --border:     rgba(255,255,255,0.07);
+  --border2:    rgba(255,255,255,0.12);
+  --text:       #e8eef6;
+  --muted:      #8899b0;
+  --dim:        #334155;
+
+  --accent:     #00f2fe;
+  --accent2:    #4facfe;
+  --accent-grad: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --accent-glow: rgba(0,242,254,0.22);
+  --accent-dim:  rgba(0,242,254,0.07);
+
+  --red:        #ff4757;
+  --red-dim:    rgba(255,71,87,0.1);
+  --green:      #2ed573;
+  --green-dim:  rgba(46,213,115,0.1);
+  --orange:     #ffa502;
+  --orange-dim: rgba(255,165,2,0.1);
+
+  --font-d: 'Inter', sans-serif;
+  --font-m: 'JetBrains Mono', monospace;
+
+  --r-xl: 24px;
+  --r-lg: 16px;
+  --r-md: 12px;
+  --r-sm: 8px;
+}
+
+/* ── SCROLLBAR ────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+/* ── BODY ─────────────────────────────────────────────── */
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-d);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+  letter-spacing: -0.1px;
+}
+
+/* Premium mesh background */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(79,172,254,0.1) 0%, transparent 45%),
+    radial-gradient(circle at 90% 85%, rgba(0,242,254,0.07) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(11,19,41,0.5) 0%, var(--bg) 100%);
+}
+
+/* Subtle noise */
+body::after {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+/* Faded grid lines — masked at edges */
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.12;
+  background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at 50% 40%, black 20%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 40%, black 20%, transparent 75%);
+}
+
+/* ── LAYOUT ───────────────────────────────────────────── */
+.app { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; padding: 2.5rem 1.25rem 6rem; }
+@media (min-width: 640px) { .app { padding: 2.5rem 2rem 6rem; } }
+
+/* ── GLASS CARD BASE ──────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5);
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+}
+
+/* ── HEADER ───────────────────────────────────────────── */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1.5rem; margin-bottom: 2.5rem;
+}
+
+.logo { display: flex; align-items: center; gap: 14px; }
+.logo-icon {
+  width: 46px; height: 46px;
+  background: var(--accent-grad);
+  border-radius: var(--r-md);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 8px 24px var(--accent-glow);
+}
+.logo-text { font-size: 19px; font-weight: 800; letter-spacing: -0.5px; }
+.logo-sub { font-size: 10px; color: var(--muted); font-family: var(--font-m); text-transform: uppercase; letter-spacing: 1.2px; margin-top: 1px; }
+
+.header-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+
+/* ── NETWORK BADGE ────────────────────────────────────── */
+.network-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(46,213,115,0.08); border: 1px solid rgba(46,213,115,0.18);
+  border-radius: 99px; padding: 6px 16px;
+  font-size: 11px; font-weight: 600; color: var(--green);
+  margin-bottom: 2rem; font-family: var(--font-m); letter-spacing: 0.5px;
+}
+
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.dot.green { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.15)} }
+
+/* ── BUTTONS ──────────────────────────────────────────── */
+.btn {
+  font-family: var(--font-d); font-size: 13px; font-weight: 600;
+  padding: 10px 20px; border-radius: var(--r-md);
+  cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+  transition: all 0.2s ease; border: 1px solid var(--border);
+  background: var(--glass); color: var(--text); white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.btn-lang { font-family: var(--font-m); font-size: 11px; font-weight: 600; color: var(--muted); padding: 9px 14px; }
+.btn-lang:hover { color: var(--accent); }
+
+/* Connect: solid white pill */
+.btn-connect { background: var(--text); color: var(--bg); font-weight: 800; border: none; }
+.btn-connect:hover { background: #fff; box-shadow: 0 0 24px rgba(255,255,255,0.15); color: var(--bg); border: none; }
+.btn-connect.connected { background: var(--green-dim); border: 1px solid rgba(46,213,115,0.3); color: var(--green); font-weight: 700; }
+.btn-connect.connected:hover { background: rgba(46,213,115,0.15); box-shadow: 0 0 16px rgba(46,213,115,0.15); }
+
+.btn-disconnect { border-color: rgba(255,71,87,0.25); color: var(--red); background: transparent; padding: 10px 14px; display: none; }
+.btn-disconnect:hover { background: var(--red-dim); border-color: var(--red); color: var(--red); box-shadow: none; }
+
+/* Primary CTA */
+.btn-primary {
+  width: 100%; padding: 16px; font-size: 15px; font-weight: 800;
+  border-radius: var(--r-md); border: none;
+  background: var(--accent-grad); color: var(--bg);
+  box-shadow: 0 10px 28px -5px rgba(0,242,254,0.3);
+  cursor: pointer; transition: all 0.25s ease;
+  font-family: var(--font-d); margin-top: 14px; letter-spacing: 0.2px;
+}
+.btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 16px 36px -5px rgba(0,242,254,0.5); }
+.btn-primary:disabled { opacity: 0.25; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-back {
+  background: transparent; border: none; color: var(--muted);
+  font-family: var(--font-d); font-size: 13px; font-weight: 600;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 2rem;
+  transition: color 0.2s;
+}
+.btn-back:hover { color: var(--text); }
+
+/* Panel action buttons */
+.action-btn {
+  background: var(--glass); border: 1px solid var(--border);
+  color: var(--text); font-family: var(--font-d); font-size: 12px; font-weight: 600;
+  padding: 10px 18px; border-radius: var(--r-sm); cursor: pointer;
+  transition: all 0.2s; white-space: nowrap;
+}
+.action-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.action-btn.green-btn { background: var(--green-dim); border-color: rgba(46,213,115,0.25); color: var(--green); }
+.action-btn.green-btn:hover:not(:disabled) { border-color: var(--green); box-shadow: 0 0 14px rgba(46,213,115,0.2); }
+.action-btn.red-btn { border-color: rgba(255,71,87,0.25); color: var(--red); }
+.action-btn.red-btn:hover:not(:disabled) { background: var(--red-dim); border-color: var(--red); }
+.action-btn.orange-btn { border-color: rgba(255,165,2,0.25); color: var(--orange); }
+.action-btn.orange-btn:hover:not(:disabled) { background: var(--orange-dim); border-color: var(--orange); }
+
+/* ── FORMS ────────────────────────────────────────────── */
+.form-group { margin-bottom: 18px; position: relative; }
+.form-group label, .input-wrap label {
+  display: block; font-size: 10px; font-weight: 700;
+  color: var(--muted); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px;
+}
+.form-group input, .input-wrap input {
+  width: 100%; background: rgba(0,0,0,0.35);
+  border: 1px solid var(--border2); border-radius: var(--r-md);
+  color: var(--text); font-family: var(--font-m); font-size: 14px;
+  padding: 14px 16px; outline: none; transition: all 0.2s ease;
+}
+.form-group input:focus, .input-wrap input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,242,254,0.12), 0 0 20px rgba(0,242,254,0.06);
+}
+.form-group input::placeholder, .input-wrap input::placeholder { color: var(--dim); }
+.unit-tag { position: absolute; right: 14px; bottom: 14px; font-size: 11px; font-weight: 600; color: var(--muted); font-family: var(--font-m); }
+.input-row { display: flex; gap: 10px; align-items: flex-end; }
+.input-row .input-wrap { flex: 1; }
+
+/* ── BADGES ───────────────────────────────────────────── */
+.badge { font-size: 10px; font-weight: 700; padding: 4px 12px; border-radius: 99px; font-family: var(--font-m); text-transform: uppercase; letter-spacing: 0.5px; }
+.badge.safe    { background: var(--green-dim); color: var(--green); border: 1px solid rgba(46,213,115,0.2); }
+.badge.warn    { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(255,165,2,0.2); }
+.badge.danger  { background: var(--red-dim); color: var(--red); border: 1px solid rgba(255,71,87,0.2); }
+.badge.neutral { background: var(--glass); color: var(--muted); border: 1px solid var(--border); }
+
+/* ── SECTION CARD ─────────────────────────────────────── */
+.section { padding: 24px; margin-bottom: 14px; border-radius: var(--r-lg); }
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.section-title { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
+
+/* ── STAT CARDS ───────────────────────────────────────── */
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; }
+.stat-card { padding: 20px; border-radius: var(--r-lg); border: 1px solid var(--border); background: rgba(0,0,0,0.2); }
+.stat-label { font-size: 9px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px; }
+.stat-value { font-size: 22px; font-weight: 800; line-height: 1.1; }
+.stat-value.accent { color: var(--accent); }
+.stat-value.green  { color: var(--green); }
+.stat-value.red    { color: var(--red); }
+.stat-value.orange { color: var(--orange); }
+.stat-sub { font-size: 10px; color: var(--dim); margin-top: 6px; font-family: var(--font-m); }
+
+/* ── PING CARD ────────────────────────────────────────── */
+.ping-card {
+  padding: 32px; margin-bottom: 14px;
+  position: relative; overflow: hidden;
+  border-radius: var(--r-xl);
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,242,254,0.07) 0%, rgba(11,19,41,0.6) 70%);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5);
+}
+/* Gradient top line */
+.ping-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--accent-grad); opacity: 0.9;
+}
+/* Subtle inner glow */
+.ping-card::after {
+  content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 60%; height: 1px;
+  background: radial-gradient(ellipse, rgba(0,242,254,0.4), transparent 70%);
+}
+
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.card-title { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
+
+.timer-display {
+  font-size: 56px; font-weight: 800;
+  color: var(--accent); letter-spacing: -2px; line-height: 1; margin-bottom: 6px;
+  font-family: var(--font-d);
+  filter: drop-shadow(0 0 30px rgba(0,242,254,0.3));
+  transition: color 0.5s, filter 0.5s;
+}
+.timer-sub { font-size: 12px; color: var(--muted); margin-bottom: 24px; font-family: var(--font-m); }
+
+.progress-track {
+  background: rgba(255,255,255,0.04); border-radius: 99px;
+  height: 5px; overflow: hidden; margin-bottom: 24px;
+  border: 1px solid rgba(255,255,255,0.03);
+}
+.progress-fill { height: 100%; border-radius: 99px; background: var(--accent-grad); transition: width 1s linear, background 0.5s; width: 100%; }
+
+.ping-btn {
+  width: 100%; background: var(--accent-grad); color: var(--bg);
+  border: none; border-radius: var(--r-md);
+  padding: 18px; font-size: 16px; font-weight: 800;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 10px 28px var(--accent-glow);
+  font-family: var(--font-d); letter-spacing: 0.3px;
+}
+.ping-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(0,242,254,0.45); }
+.ping-btn:active:not(:disabled) { transform: scale(0.99); }
+.ping-btn:disabled { background: rgba(255,255,255,0.04); color: var(--dim); border: 1px solid var(--border); cursor: not-allowed; box-shadow: none; transform: none; }
+
+/* ── TOKEN ROWS ───────────────────────────────────────── */
+.token-row { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.token-row:last-child { border-bottom: none; padding-bottom: 0; }
+.token-row:first-child { padding-top: 0; }
+.token-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: var(--muted); flex-shrink: 0;
+}
+.token-info { flex: 1; }
+.token-name { font-size: 14px; font-weight: 700; }
+.token-addr { font-size: 10px; color: var(--muted); margin-top: 1px; font-family: var(--font-m); }
+
+/* ── INFO ROWS ────────────────────────────────────────── */
+.info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.info-row:last-child { border-bottom: none; }
+.info-key { color: var(--muted); font-weight: 500; }
+.info-val { font-family: var(--font-m); color: var(--text); text-align: right; }
+.info-val.mono-sm { font-size: 10px; color: var(--dim); }
+
+.explorer-links { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.ext-link {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600;
+  color: var(--muted); text-decoration: none; border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 6px 12px; transition: all 0.2s;
+}
+.ext-link:hover { color: var(--accent); border-color: rgba(0,242,254,0.35); box-shadow: 0 0 14px rgba(0,242,254,0.1); }
+
+/* ── DANGER ZONE ──────────────────────────────────────── */
+.danger-zone { border-color: rgba(255,71,87,0.14); }
+.danger-zone .section-title { color: var(--red); }
+.danger-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* ── LOG ──────────────────────────────────────────────── */
+.log {
+  background: rgba(0,0,0,0.35); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 14px 16px;
+  font-size: 11px; color: var(--muted); max-height: 130px; overflow-y: auto;
+  font-family: var(--font-m); line-height: 1.7;
+}
+.log-entry.ok   { color: var(--green); }
+.log-entry.err  { color: var(--red); }
+.log-entry.info { color: var(--accent); }
+
+/* ── STATUS MSG ───────────────────────────────────────── */
+.status-msg {
+  font-size: 12px; padding: 11px 14px; border-radius: var(--r-sm);
+  margin-top: 12px; display: none; line-height: 1.5; font-weight: 500;
+}
+.status-msg.show    { display: block; }
+.status-msg.ok      { background: var(--green-dim); color: var(--green); border: 1px solid rgba(46,213,115,0.2); }
+.status-msg.err     { background: var(--red-dim); color: var(--red); border: 1px solid rgba(255,71,87,0.2); }
+.status-msg.loading { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(0,242,254,0.2); }
+
+/* ── LANDING ──────────────────────────────────────────── */
+.landing { text-align: center; padding: 2.5rem 0 1rem; }
+
+.landing-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 700; color: var(--accent);
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.75rem;
+  padding: 7px 18px; border-radius: 99px;
+  background: var(--accent-dim); border: 1px solid rgba(0,242,254,0.15);
+}
+
+.landing-title {
+  font-size: clamp(30px, 6vw, 52px); font-weight: 800;
+  line-height: 1.08; letter-spacing: -1.5px; margin-bottom: 1.25rem;
+}
+.landing-title span {
+  background: var(--accent-grad);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.landing-sub { font-size: 16px; color: var(--muted); line-height: 1.8; max-width: 520px; margin: 0 auto 3rem; font-weight: 400; }
+
+/* 12-col grid for landing cards */
+.landing-cards { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; margin-bottom: 2rem; }
+.landing-card {
+  grid-column: span 6; text-align: left; padding: 26px 24px; cursor: pointer;
+  position: relative; overflow: hidden;
+}
+.landing-card.full {
+  grid-column: span 12;
+  display: flex; align-items: center; gap: 20px;
+}
+.landing-card.full .landing-card-icon { margin-bottom: 0; flex-shrink: 0; }
+.landing-card.full .landing-card-title { margin-bottom: 4px; }
+.landing-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(0,242,254,0.04), transparent 60%);
+  opacity: 0; transition: opacity 0.3s;
+}
+.landing-card:hover { border-color: rgba(0,242,254,0.3); transform: translateY(-4px); box-shadow: 0 24px 48px -12px rgba(0,242,254,0.12); }
+.landing-card:hover::before { opacity: 1; }
+
+.landing-card-icon {
+  font-size: 24px; margin-bottom: 14px; width: 52px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.03); border-radius: var(--r-md); border: 1px solid var(--border);
+  line-height: 1; flex-shrink: 0;
+}
+.landing-card-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.3px; line-height: 1.3; }
+.landing-card-desc { font-size: 13px; color: var(--muted); line-height: 1.7; font-weight: 400; }
+
+.why-heading { font-size: 10px; font-weight: 800; color: var(--accent); letter-spacing: 1.5px; text-transform: uppercase; margin: 18px 0 10px; }
+.why-bullets { list-style: none; border-top: 1px solid var(--border); padding-top: 12px; }
+.why-bullets li { font-size: 12px; color: var(--muted); margin-bottom: 6px; line-height: 1.6; }
+.fee-badge {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700;
+  color: var(--accent); background: var(--accent-dim); padding: 5px 12px;
+  border-radius: var(--r-sm); margin-top: 14px; font-family: var(--font-m); letter-spacing: 0.3px;
+}
+
+/* ── GUIDE ────────────────────────────────────────────── */
+.guide-steps { display: flex; flex-direction: column; margin: 1.5rem 0 1rem; }
+/* Risk screen */
+.risk-item { padding: 18px 0; border-bottom: 1px solid var(--border); }
+.risk-item:last-child { border-bottom: none; }
+.risk-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+.risk-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.risk-fn { font-size: 11px; color: var(--accent); font-family: var(--font-m); margin-bottom: 8px; }
+.risk-body { font-size: 13px; color: var(--muted); line-height: 1.8; }
+.risk-body code { background: rgba(0,242,254,0.08); border: 1px solid rgba(0,242,254,0.15); border-radius: 4px; padding: 1px 6px; font-family: var(--font-m); font-size: 12px; color: var(--accent); }
+.risk-badge { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 99px; white-space: nowrap; font-family: var(--font-m); }
+.risk-badge.safe { background: var(--green-dim); color: var(--green); border: 1px solid rgba(46,213,115,0.2); }
+.risk-badge.warn { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(255,165,2,0.2); }
+.risk-summary { background: rgba(0,242,254,0.04); border: 1px solid rgba(0,242,254,0.15); border-radius: var(--r-md); padding: 18px 20px; margin-top: 1.5rem; }
+.risk-summary-title { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+.risk-summary-body { font-size: 13px; color: var(--muted); line-height: 1.8; }
+.guide-step { display: flex; gap: 20px; padding: 18px 0; border-bottom: 1px solid var(--border); }
+.guide-step:last-child { border-bottom: none; }
+.guide-num { font-size: 11px; font-weight: 800; color: var(--accent); font-family: var(--font-m); min-width: 28px; padding-top: 2px; letter-spacing: 1px; }
+.guide-title { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+.guide-desc { font-size: 12px; color: var(--muted); line-height: 1.8; }
+.guide-warning {
+  background: rgba(255,165,2,0.05); border: 1px solid rgba(255,165,2,0.18);
+  border-radius: var(--r-md); padding: 16px 18px; margin-bottom: 1.5rem;
+}
+.guide-warn-title { font-size: 12px; font-weight: 800; color: var(--orange); margin-bottom: 6px; }
+.guide-warn-body { font-size: 12px; color: var(--muted); line-height: 1.8; }
+
+/* ── SETUP / LOAD FORM ────────────────────────────────── */
+.setup-form, .load-form { max-width: 520px; margin: 0 auto; }
+.setup-title { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px; }
+.setup-sub { font-size: 13px; color: var(--muted); margin-bottom: 2rem; line-height: 1.7; }
+
+/* ── CONTRACT LIST ────────────────────────────────────── */
+.contract-item {
+  display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+  background: var(--glass); border: 1px solid var(--border); border-radius: var(--r-md);
+  margin-bottom: 8px; cursor: pointer; transition: all 0.2s;
+}
+.contract-item:hover { border-color: rgba(0,242,254,0.3); box-shadow: 0 0 20px rgba(0,242,254,0.07); }
+.contract-addr-short { font-family: var(--font-m); font-size: 13px; color: var(--text); flex: 1; font-weight: 500; }
+.contract-item-sub { font-size: 10px; color: var(--muted); font-family: var(--font-m); }
+
+/* ── PANEL HEADER ─────────────────────────────────────── */
+.panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+.panel-contract-label { font-family: var(--font-m); font-size: 12px; display: flex; align-items: center; gap: 8px; color: var(--muted); }
+
+/* ── MM WARNING ───────────────────────────────────────── */
+.mm-warn {
+  background: rgba(255,165,2,0.04); border: 1px solid rgba(255,165,2,0.12);
+  border-radius: var(--r-lg); padding: 20px 22px; margin-bottom: 14px;
+}
+.mm-warn-title { font-size: 12px; font-weight: 800; color: var(--orange); margin-bottom: 8px; }
+.mm-warn-body { font-size: 12px; color: var(--muted); line-height: 1.8; margin-bottom: 12px; }
+.mm-check { font-size: 12px; color: var(--green); padding: 2px 0; line-height: 1.7; font-weight: 600; }
+
+/* ── ANIMATIONS ───────────────────────────────────────── */
+@keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+.screen-in { animation: fadeUp 0.3s ease both; }
+
+/* ── RESPONSIVE ───────────────────────────────────────── */
+@media (max-width: 520px) {
+  .landing-card { grid-column: span 12; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .danger-grid { grid-template-columns: 1fr; }
+  .timer-display { font-size: 40px; }
+  .ping-card { padding: 22px; }
+  .section { padding: 18px 16px; }
+  .header { padding: 1rem; }
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header card">
+    <div class="logo">
+      <div class="logo-icon">🔑</div>
+      <div>
+        <div class="logo-text">Dead Man's Key</div>
+        <div class="logo-sub" data-i18n="subtitle">dijital miras sözleşmesi</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-lang" id="langBtn" onclick="toggleLang()">EN</button>
+      <button class="btn btn-connect" id="connectBtn" onclick="connectWallet()">
+        <span class="dot" id="connDot"></span>
+        <span id="connectLabel" data-i18n="connect">cüzdan bağla</span>
+      </button>
+      <button class="btn btn-disconnect" id="disconnectBtn" onclick="disconnectWallet()" title="Disconnect">✕</button>
+    </div>
+  </div>
+
+  <!-- NETWORK -->
+  <div class="network-badge">
+    <span class="dot green"></span>
+    Base Mainnet · Chain 8453
+  </div>
+
+  <!-- ══ LANDING ══════════════════════════════════════════ -->
+  <div id="screenLanding" class="screen-in">
+    <div class="landing">
+      <div class="landing-eyebrow" data-i18n="eyebrow">⬡ on-chain · aracısız · tam kontrol</div>
+      <h1 class="landing-title" data-i18n="landingTitle">
+        Geleceğinizi Kodlayın,<br><span>Varlıklarınızı Güvenceye Alın.</span>
+      </h1>
+      <p class="landing-sub" data-i18n="landingDesc">
+        30 gün boyunca sisteme giriş yapmazsanız, tüm kripto varlıklarınız belirlediğiniz cüzdan adresine otomatik olarak aktarılır. Tamamen blokzincir üzerinde, aracı olmadan ve güvene dayalı kalmadan çalışır.
+      </p>
+      <div class="landing-cards">
+        <!-- Yeni sözleşme -->
+        <div class="landing-card card" onclick="showSetup()">
+          <div class="landing-card-icon">🆕</div>
+          <div class="landing-card-title" data-i18n="newContract">Yeni Sözleşme Oluştur</div>
+          <div class="why-heading" data-i18n="whyHeading">Neden DMK?</div>
+          <ul class="why-bullets">
+            <li data-i18n="whyBullet1">— <strong>Aracı Yok:</strong> Banka, avukat veya mahkeme süreçleriyle uğraşmazsınız. Kod, kural neyse onu uygular.</li>
+            <li data-i18n="whyBullet2">— <strong>Tam Kontrol:</strong> Özel anahtarınız asla sizden çıkmaz. Token'larınız hayatta olduğunuz sürece tamamen size aittir.</li>
+            <li data-i18n="whyBullet3">— <strong>Tek Seferlik Kurulum:</strong> Sözleşmeyi bir kez deploy etmeniz yeterlidir.</li>
+          </ul>
+          <div class="fee-badge"><span data-i18n="oneTime">tek seferlik kurulum</span></div>
+        </div>
+        <!-- Mevcut sözleşme -->
+        <div class="landing-card card" onclick="showLoad()">
+          <div class="landing-card-icon">📂</div>
+          <div class="landing-card-title" data-i18n="loadContract">Mevcut Sözleşmeyi Yükle</div>
+          <div class="landing-card-desc" data-i18n="loadContractDesc">Daha önce oluşturduğunuz bir sözleşmeyi yönetin.</div>
+        </div>
+        <!-- Mirasçı rehberi — full width -->
+        <div class="landing-card card full" onclick="showBeneficiary()">
+          <div class="landing-card-icon">📜</div>
+          <div>
+            <div class="landing-card-title" data-i18n="beneficiaryGuideTitle">Yararlanıcı (Mirasçı) Kılavuzu</div>
+            <div class="landing-card-desc" data-i18n="beneficiaryGuideDesc">Size bırakılmış bir DMK sözleşmesi varsa, ne yapmanız gerektiğini buradan öğrenin.</div>
+          </div>
+        </div>
+        <!-- Risk açıklaması — full width -->
+        <div class="landing-card card full" onclick="showRisk()">
+          <div class="landing-card-icon">🛡️</div>
+          <div>
+            <div class="landing-card-title" data-i18n="riskTitle">This Is My Risk — Güvenlik Analizi</div>
+            <div class="landing-card-desc" data-i18n="riskDesc">Sözleşme güvenlik taraması bulguları ve neden gerçek bir tehdit oluşturmadıkları.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ RISK SCREEN ══════════════════════════════════════ -->
+  <div id="screenRisk" style="display:none;">
+    <button class="btn-back" onclick="showLanding()">← <span data-i18n="back">geri</span></button>
+    <div class="setup-form" style="max-width:640px;">
+      <div class="landing-eyebrow" style="margin-bottom:1rem;">🛡️ This Is My Risk</div>
+      <div class="setup-title" data-i18n="riskTitle">Güvenlik Analizi</div>
+      <div class="setup-sub" data-i18n="riskSubtitle">Sözleşme kodu Remix Static Analyzer ile taranmış ve manuel olarak incelenmiştir. Aşağıda tüm bulgular ve değerlendirmeleri yer almaktadır.</div>
+
+      <!-- Lang tabs -->
+      <div style="display:flex;gap:8px;margin-bottom:1.5rem;">
+        <button class="btn" id="riskTrBtn" onclick="showRiskLang('tr')" style="font-size:11px;padding:7px 16px;">🇹🇷 Türkçe</button>
+        <button class="btn" id="riskEnBtn" onclick="showRiskLang('en')" style="font-size:11px;padding:7px 16px;">🇬🇧 English</button>
+      </div>
+
+      <!-- TR -->
+      <div id="riskContentTr">
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge safe">✓ Gerçek Risk Yok</span><span class="risk-title">1. Reentrancy (Tekrar Giriş Saldırısı)</span></div>
+          <div class="risk-fn">releaseAll() · emergencyWithdrawETH() · withdrawFees()</div>
+          <div class="risk-body">Araç, ETH transferi yapan fonksiyonlarda Checks-Effects-Interactions ihlali olabileceğini bildirdi. Ancak <code>releaseAll()</code>'da <code>fundsReleased = true</code> ETH transferinden önce set edilmektedir — tekrar çağrı gelirse <code>notReleased</code> modifier reddeder. Ayrıca fonksiyon yalnızca <code>onlyBeneficiary</code> ile kilitlidir; harici bir saldırgan erişemez. Remix bu uyarıyı modifier'ları analiz etmeden otomatik verir.</div>
+        </div>
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge safe">✓ Gerçek Risk Yok</span><span class="risk-title">2. block.timestamp Manipülasyonu</span></div>
+          <div class="risk-fn">timeExpired modifier · ping() · timeRemaining() · canRelease()</div>
+          <div class="risk-body">Base ağı Proof-of-Stake kullanmaktadır; validator timestamp sapması ~2 saniye ile sınırlıdır. Sözleşmedeki minimum timeout 7 gün (604.800 saniye), maksimum 365 gündür. 2 saniyelik sapma bu süreler için tamamen anlamsızdır.</div>
+        </div>
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge safe">✓ Gerçek Risk Yok</span><span class="risk-title">3. Low Level .call Kullanımı</span></div>
+          <div class="risk-fn">releaseAll() · emergencyWithdrawETH() · withdrawFees()</div>
+          <div class="risk-body">ETH transferi için <code>.call{value: x}("")</code> günümüzde Solidity'nin önerdiği standart yöntemdir. Eski <code>transfer()</code> ve <code>send()</code> EIP-1884 sonrasında gas sorunları nedeniyle terk edilmiştir. Tüm .call çağrılarının dönüş değeri kontrol edilmekte, başarısız olursa işlem geri alınmaktadır.</div>
+        </div>
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge warn">▲ Düşük — Kontrol Altında</span><span class="risk-title">4. Dinamik Dizi Döngüsü (Gas Limiti)</span></div>
+          <div class="risk-fn">releaseAll() · addToken() · removeToken()</div>
+          <div class="risk-body">Token listesi büyüdükçe <code>releaseAll()</code> gas tüketimi artar. Ancak token ekleme yetkisi yalnızca sözleşme sahibindedir; sahip kendi aleyhine bu riski yaratmaz. Varsayılan yalnızca 3 token (USDC, USDT, WBTC) mevcuttur. V3 sözleşmesinde MAX_TOKENS = 20 hard limit eklenmiştir.</div>
+        </div>
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge safe">✓ Gerçek Risk Yok</span><span class="risk-title">5. Tek Dosyada Birden Fazla Contract</span></div>
+          <div class="risk-fn">ReentrancyGuard · DeadMansKey · DeadMansKeyFactory</div>
+          <div class="risk-body">Solidity tek dosyada birden fazla contract tanımlanmasına izin verir. Bu yaygın bir pratiktir ve güvenlik açığı değil kod organizasyonu tercihidir.</div>
+        </div>
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge safe">✓ Gerçek Risk Yok</span><span class="risk-title">6. Custom Error Yerine require</span></div>
+          <div class="risk-fn">Tüm require ifadeleri</div>
+          <div class="risk-body">Custom Errors gas açısından daha verimlidir ancak <code>require</code> güvenlik açısından tamamen geçerlidir. Bu bir optimizasyon önerisidir, güvenlik açığı değildir.</div>
+        </div>
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge safe">✓ Gerçek Risk Yok</span><span class="risk-title">7. Hata Mesajı Uzunluğu</span></div>
+          <div class="risk-body">Solhint'in 32 karakter sınırı stilistik bir kuraldır; Solidity'nin zorunlu kısıtlaması değildir. Uzun mesajlar yalnızca hafif gas artışına yol açar.</div>
+        </div>
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge safe">✓ Gerçek Risk Yok</span><span class="risk-title">8. Constructor Visibility</span></div>
+          <div class="risk-body">Solidity 0.7.0+ sürümlerinde constructor visibility implicit olarak public'tir. Sözleşme ^0.8.20 kullanmaktadır; bu eski versiyonlara yönelik bir uyarıdır.</div>
+        </div>
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge safe">✓ Gerçek Risk Yok</span><span class="risk-title">9. Benzer Değişken İsimleri</span></div>
+          <div class="risk-body">MIN_TIMEOUT ve MAX_TIMEOUT kasıtlı olarak benzer isimlendirilmiş constant değişkenlerdir. Her biri doğru bağlamda kullanılmaktadır; yazım hatası değildir.</div>
+        </div>
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge safe">✓ Gerçek Risk Yok</span><span class="risk-title">10. IERC20 Interface Return Değeri</span></div>
+          <div class="risk-body">Interface tanımları gövde içermez; return değeri implement eden kontrat tarafından sağlanır. Bu Solidity'nin temel sözdizim kuralıdır.</div>
+        </div>
+
+        <div class="risk-summary">
+          <div class="risk-summary-title">📊 Genel Değerlendirme</div>
+          <div class="risk-summary-body">Tespit edilen 10 bulgunun 9'u gerçek bir saldırı vektörü içermemektedir. 1 bulgu (gas limiti) düşük seviyeli ve kontrol altındadır. Sözleşme üretim ortamında kullanım için yeterli güvenlik seviyesine sahiptir.</div>
+        </div>
+      </div>
+
+      <!-- EN -->
+      <div id="riskContentEn" style="display:none;">
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge safe">✓ No Real Risk</span><span class="risk-title">1. Reentrancy</span></div>
+          <div class="risk-fn">releaseAll() · emergencyWithdrawETH() · withdrawFees()</div>
+          <div class="risk-body">The tool flagged potential Checks-Effects-Interactions violations in ETH-transferring functions. However, in <code>releaseAll()</code>, <code>fundsReleased = true</code> is set BEFORE the ETH transfer — any reentrant call is rejected by the <code>notReleased</code> modifier. The function is also gated by <code>onlyBeneficiary</code>; no external attacker can access it. Remix generates this warning automatically without analyzing modifiers.</div>
+        </div>
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge safe">✓ No Real Risk</span><span class="risk-title">2. block.timestamp Manipulation</span></div>
+          <div class="risk-fn">timeExpired modifier · ping() · timeRemaining() · canRelease()</div>
+          <div class="risk-body">Base uses Proof-of-Stake consensus; validator timestamp deviation is limited to ~2 seconds. The contract's minimum timeout is 7 days (604,800 seconds), maximum 365 days. A 2-second deviation is completely irrelevant over these durations.</div>
+        </div>
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge safe">✓ No Real Risk</span><span class="risk-title">3. Low Level .call Usage</span></div>
+          <div class="risk-fn">releaseAll() · emergencyWithdrawETH() · withdrawFees()</div>
+          <div class="risk-body"><code>.call{value: x}("")</code> is the current Solidity-recommended standard for ETH transfers. The older <code>transfer()</code> and <code>send()</code> were deprecated after EIP-1884 due to gas issues. All .call return values are checked — failed calls revert the transaction.</div>
+        </div>
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge warn">▲ Low — Controlled</span><span class="risk-title">4. For Loop Over Dynamic Array</span></div>
+          <div class="risk-fn">releaseAll() · addToken() · removeToken()</div>
+          <div class="risk-body">Gas usage in <code>releaseAll()</code> grows with token list size. However, only the contract owner can add tokens — an owner would not deliberately create this risk against themselves. Only 3 tokens exist by default (USDC, USDT, WBTC). V3 adds MAX_TOKENS = 20 as a hard limit.</div>
+        </div>
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge safe">✓ No Real Risk</span><span class="risk-title">5. Multiple Contracts Per File</span></div>
+          <div class="risk-fn">ReentrancyGuard · DeadMansKey · DeadMansKeyFactory</div>
+          <div class="risk-body">Solidity allows multiple contracts in a single file. This is common practice and a code organization preference, not a security vulnerability.</div>
+        </div>
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge safe">✓ No Real Risk</span><span class="risk-title">6. require Instead of Custom Errors</span></div>
+          <div class="risk-fn">All require statements</div>
+          <div class="risk-body">Custom Errors are more gas-efficient but <code>require</code> is completely valid from a security standpoint. This is an optimization suggestion, not a vulnerability.</div>
+        </div>
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge safe">✓ No Real Risk</span><span class="risk-title">7. Error Message Length</span></div>
+          <div class="risk-body">Solhint's 32-character limit is a stylistic rule, not a Solidity requirement. Longer messages only add minor gas overhead.</div>
+        </div>
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge safe">✓ No Real Risk</span><span class="risk-title">8. Constructor Visibility</span></div>
+          <div class="risk-body">Since Solidity 0.7.0, constructor visibility is implicitly public. This contract uses ^0.8.20; the warning targets legacy versions.</div>
+        </div>
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge safe">✓ No Real Risk</span><span class="risk-title">9. Similar Variable Names</span></div>
+          <div class="risk-body">MIN_TIMEOUT and MAX_TIMEOUT are intentionally named constants, each used correctly in its context. Not a typo or logic error.</div>
+        </div>
+        <div class="risk-item">
+          <div class="risk-header"><span class="risk-badge safe">✓ No Real Risk</span><span class="risk-title">10. IERC20 Interface Return Value</span></div>
+          <div class="risk-body">Interface definitions have no body by design; return values are provided by the implementing contract. This is fundamental Solidity syntax.</div>
+        </div>
+
+        <div class="risk-summary">
+          <div class="risk-summary-title">📊 Overall Assessment</div>
+          <div class="risk-summary-body">9 of 10 findings contain no real attack vector. 1 finding (gas limit) is low-severity and controlled. The contract meets sufficient security standards for production use.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ BENEFICIARY GUIDE ════════════════════════════════ -->
+  <div id="screenBeneficiary" style="display:none;">
+    <button class="btn-back" onclick="showLanding()">← <span data-i18n="back">geri</span></button>
+    <div class="setup-form">
+      <div class="setup-title" data-i18n="beneficiaryGuideTitle">Mirasçı Rehberi</div>
+      <div class="setup-sub" data-i18n="beneficiaryGuideSub">Sana bir DMK sözleşmesi bırakıldıysa aşağıdaki adımları takip et.</div>
+      <div class="guide-steps">
+        <div class="guide-step">
+          <div class="guide-num">01</div>
+          <div><div class="guide-title" data-i18n="gs1title">Sözleşme adresini öğren</div><div class="guide-desc" data-i18n="gs1desc">Sözleşmeyi kuran kişi sana bir adres bırakmış olmalı. Bu adres "0x..." ile başlar. Güvenli bir yerde sakla.</div></div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">02</div>
+          <div><div class="guide-title" data-i18n="gs2title">Sürenin dolmasını bekle</div><div class="guide-desc" data-i18n="gs2desc">Sahip ping atmayı bıraktıktan sonra belirlenen süre (genellikle 30 gün) dolmalıdır. Basescan'da "timeRemaining" ile kontrol edebilirsin.</div></div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">03</div>
+          <div><div class="guide-title" data-i18n="gs3title">Cüzdanını bağla</div><div class="guide-desc" data-i18n="gs3desc">Sözleşmede kayıtlı mirasçı adresi senin cüzdanın olmalı. MetaMask veya uyumlu bir cüzdan ile bu siteye bağlan.</div></div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">04</div>
+          <div><div class="guide-title" data-i18n="gs4title">"Mevcut sözleşmemi yükle" seç</div><div class="guide-desc" data-i18n="gs4desc">Ana ekrandan "Mevcut sözleşmemi yükle"ye tıkla, sözleşme adresini gir ve yükle.</div></div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">05</div>
+          <div><div class="guide-title" data-i18n="gs5title">Release All — fonları al</div><div class="guide-desc" data-i18n="gs5desc">Panel ekranında "mirasçı çekimi" butonuna bas. ETH ve tüm tokenlar anında senin cüzdanına transfer olur. Bu işlem geri alınamaz.</div></div>
+        </div>
+      </div>
+      <div class="guide-warning">
+        <div class="guide-warn-title" data-i18n="guideWarnTitle">⚠ Dikkat</div>
+        <div class="guide-warn-body" data-i18n="guideWarnBody">Süre dolmadan "Release All" çağıramazsın — sözleşme reddeder. Gas ücreti için cüzdanında küçük miktarda ETH bulundur.</div>
+      </div>
+      <button class="btn-primary" onclick="showLoad()" data-i18n="goToLoad">📂 Sözleşmeyi Yükle</button>
+    </div>
+  </div>
+
+  <!-- ══ SETUP ════════════════════════════════════════════ -->
+  <div id="screenSetup" style="display:none;">
+    <button class="btn-back" onclick="showLanding()">← <span data-i18n="back">geri</span></button>
+    <div class="setup-form">
+      <div class="setup-title" data-i18n="newContract">Yeni sözleşme kur</div>
+      <div class="setup-sub" data-i18n="setupDesc">Sözleşme deploy edilince 0.00005 ETH platform ücreti alınır.</div>
+      <div class="form-group">
+        <label data-i18n="beneficiaryLabel">mirasçı adresi</label>
+        <input type="text" id="setupBeneficiary" placeholder="0x..." />
+      </div>
+      <div class="form-group">
+        <label data-i18n="timeoutLabel2">süre (gün)</label>
+        <input type="number" id="setupTimeout" value="30" min="7" max="365" />
+      </div>
+      <div class="status-msg" id="setupStatus"></div>
+      <button class="btn-primary" id="deployBtn" onclick="deployNew()" disabled data-i18n="deployBtn">🚀 Sözleşme Deploy Et (0.00005 ETH)</button>
+    </div>
+  </div>
+
+  <!-- ══ LOAD ══════════════════════════════════════════════ -->
+  <div id="screenLoad" style="display:none;">
+    <button class="btn-back" onclick="showLanding()">← <span data-i18n="back">geri</span></button>
+    <div class="load-form">
+      <div class="setup-title" data-i18n="loadContract">Mevcut sözleşmemi yükle</div>
+      <div class="setup-sub" data-i18n="loadDesc">Cüzdanına bağlı sözleşmeleri otomatik bulur veya adres girerek yükle.</div>
+      <div id="userContractsList" style="margin-bottom:1rem;"></div>
+      <div class="form-group">
+        <label data-i18n="manualAddr">manuel adres gir</label>
+        <input type="text" id="manualAddr" placeholder="0x..." />
+      </div>
+      <button class="btn-primary" onclick="loadManual()" data-i18n="loadBtn">📂 Sözleşmeyi Yükle</button>
+      <div class="status-msg" id="loadStatus"></div>
+    </div>
+  </div>
+
+  <!-- ══ PANEL ═════════════════════════════════════════════ -->
+  <div id="screenPanel" style="display:none;">
+    <div class="panel-header">
+      <button class="btn-back" style="margin:0;" onclick="showLanding()">← <span data-i18n="back">geri</span></button>
+      <div class="panel-contract-label">
+        <span class="dot green"></span>
+        <span id="activeContractLabel">—</span>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label" data-i18n="ethBalance">ETH bakiye</div>
+        <div class="stat-value accent" id="ethBalance">—</div>
+        <div class="stat-sub" data-i18n="inContract">sözleşmede</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" data-i18n="timeLeft">kalan süre</div>
+        <div class="stat-value green" id="timeLeftStat">—</div>
+        <div class="stat-sub" id="timeLeftSub" data-i18n="remaining">kaldı</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" data-i18n="gasSafety">gas güvencesi</div>
+        <div class="stat-value green" id="gasSafeStat">—</div>
+        <div class="stat-sub">min 0.005 ETH</div>
+      </div>
+    </div>
+
+    <!-- Ping / Heartbeat -->
+    <div class="ping-card">
+      <div class="card-header">
+        <div class="card-title" data-i18n="lifeSignal">⏱ yaşam sinyali</div>
+        <span class="badge neutral" id="pingBadge">—</span>
+      </div>
+      <div class="timer-display" id="timerDisplay"><span data-i18n="notConnected">bağlanılmadı</span></div>
+      <div class="timer-sub" id="timerSub" data-i18n="connectPrompt">cüzdanı bağlayarak süreyi yükle</div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <button class="ping-btn" id="pingBtn" onclick="doPing()" disabled data-i18n="pingBtn">🫀 ping at — hayatta olduğunu kanıtla</button>
+      <div class="status-msg" id="pingStatus"></div>
+    </div>
+
+    <!-- MetaMask Warning -->
+    <div class="mm-warn">
+      <div class="mm-warn-title" data-i18n="mmWarnTitle">MetaMask güvenlik uyarısı hakkında</div>
+      <div class="mm-warn-body" data-i18n="mmWarnBody">Approve işlemi sırasında MetaMask uyarısı gösterebilir. Bu uyarı yeni sözleşmelerde otomatik çıkar — güvensiz olduğu anlamına gelmez.</div>
+      <div class="mm-check">✓ <span data-i18n="mmCheck1">Sözleşme kodu Sourcify ve Blockscout'ta doğrulandı</span></div>
+      <div class="mm-check">✓ <span data-i18n="mmCheck2">Token'lar cüzdanında kalır — sadece süre dolduktan sonra erişebilir</span></div>
+      <div class="mm-check">✓ <span data-i18n="mmCheck3">Approve'u istediğin zaman iptal edebilirsin</span></div>
+    </div>
+
+    <!-- ETH Deposit -->
+    <div class="section card">
+      <div class="section-header"><div class="section-title" data-i18n="depositTitle">💰 ETH yatır</div></div>
+      <div class="input-row">
+        <div class="input-wrap" style="flex:1;position:relative;">
+          <label data-i18n="amount">miktar</label>
+          <input type="number" id="depositAmount" placeholder="0.01" step="0.001" min="0" />
+          <span class="unit-tag">ETH</span>
+        </div>
+        <button class="action-btn green-btn" id="depositBtn" onclick="doDeposit()" disabled data-i18n="deposit">yatır</button>
+      </div>
+      <div class="status-msg" id="depositStatus"></div>
+    </div>
+
+    <!-- Token Approvals -->
+    <div class="section card">
+      <div class="section-header">
+        <div class="section-title" data-i18n="tokenTitle">🔐 token yetkileri</div>
+        <span style="font-size:11px;color:var(--muted);font-weight:600;" data-i18n="tokenSub">cüzdanda kalır</span>
+      </div>
+      <div class="token-row">
+        <div class="token-avatar" style="color:#2775ca;border-color:rgba(39,117,202,0.3);">U</div>
+        <div class="token-info"><div class="token-name">USDC</div><div class="token-addr">0x833589fCD6...A02913</div></div>
+        <span class="badge neutral" id="usdcStatus">—</span>
+        <button class="action-btn" onclick="approveToken('usdc')" id="usdcBtn" disabled data-i18n="approveBtn">approve</button>
+      </div>
+      <div class="token-row">
+        <div class="token-avatar" style="color:#26a17b;border-color:rgba(38,161,123,0.3);">T</div>
+        <div class="token-info"><div class="token-name">USDT</div><div class="token-addr">0xfde4C96c85...99bb2</div></div>
+        <span class="badge neutral" id="usdtStatus">—</span>
+        <button class="action-btn" onclick="approveToken('usdt')" id="usdtBtn" disabled data-i18n="approveBtn">approve</button>
+      </div>
+      <div class="token-row">
+        <div class="token-avatar" style="color:#f7931a;border-color:rgba(247,147,26,0.3);">₿</div>
+        <div class="token-info"><div class="token-name">WBTC</div><div class="token-addr">0x0555E30da8...2B9c</div></div>
+        <span class="badge neutral" id="wbtcStatus">—</span>
+        <button class="action-btn" onclick="approveToken('wbtc')" id="wbtcBtn" disabled data-i18n="approveBtn">approve</button>
+      </div>
+      <div class="status-msg" id="approveStatus"></div>
+    </div>
+
+    <!-- Contract Info -->
+    <div class="section card">
+      <div class="section-header"><div class="section-title" data-i18n="contractInfo">📋 sözleşme bilgisi</div></div>
+      <div class="info-row"><span class="info-key" data-i18n="address">adres</span><span class="info-val mono-sm" id="contractAddrDisplay">—</span></div>
+      <div class="info-row"><span class="info-key" data-i18n="owner">sahip</span><span class="info-val mono-sm" id="ownerDisplay">—</span></div>
+      <div class="info-row"><span class="info-key" data-i18n="beneficiary">mirasçı</span><span class="info-val mono-sm" id="benefDisplay">—</span></div>
+      <div class="info-row"><span class="info-key" data-i18n="timeoutLabel">timeout</span><span class="info-val" id="timeoutDisplay">—</span></div>
+      <div class="info-row"><span class="info-key" data-i18n="network">ağ</span><span class="info-val">Base Mainnet (8453)</span></div>
+      <div class="explorer-links" id="explorerLinks"></div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="section card danger-zone">
+      <div class="section-header"><div class="section-title" data-i18n="dangerTitle">⚠ acil işlemler</div></div>
+      <div class="danger-grid">
+        <button class="action-btn red-btn" id="withdrawBtn" onclick="doEmergencyWithdraw()" disabled data-i18n="withdrawBtn">ETH geri çek</button>
+        <button class="action-btn orange-btn" id="releaseBtn" onclick="doRelease()" disabled data-i18n="releaseBtn">mirasçı çekimi</button>
+      </div>
+      <div class="status-msg" id="dangerStatus"></div>
+    </div>
+
+    <!-- TX Log -->
+    <div class="section card">
+      <div class="section-header"><div class="section-title" data-i18n="logTitle">📟 işlem logu</div></div>
+      <div class="log" id="txLog"><div class="log-entry info" id="logInitMsg">// işlemler burada görünür</div></div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+const FACTORY_ADDRESS = '0xBADcae96CE89FDE72271c134d8863a9996ad88a7';
+const BASE_CHAIN = '0x2105';
+const DEPLOY_FEE = '50000000000000';
+
+const FACTORY_ABI = [
+  'function deployContract(address _beneficiary, uint256 _timeoutDays, address[] calldata _tokens) external payable returns (address)',
+  'function getUserContracts(address _user) external view returns (address[])',
+  'function deployFee() external view returns (uint256)',
+  'event ContractDeployed(address indexed owner, address indexed contractAddress, address beneficiary, uint256 timeoutDays)',
+];
+const DMK_ABI = [
+  'function ping() external',
+  'function depositETH() external payable',
+  'function getETHBalance() external view returns (uint256)',
+  'function timeRemaining() external view returns (uint256)',
+  'function isGasSafe() external view returns (bool)',
+  'function owner() external view returns (address)',
+  'function beneficiary() external view returns (address)',
+  'function timeout() external view returns (uint256)',
+  'function lastPing() external view returns (uint256)',
+  'function releaseAll() external',
+  'function emergencyWithdrawETH() external',
+  'function fundsReleased() external view returns (bool)',
+];
+const ERC20_ABI = [
+  'function approve(address spender, uint256 amount) external returns (bool)',
+  'function allowance(address owner, address spender) external view returns (uint256)',
+];
+const TOKENS = {
+  usdc: { addr: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', sym: 'USDC' },
+  usdt: { addr: '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2', sym: 'USDT' },
+  wbtc: { addr: '0x0555E30da8f98308EdB960aa94C0Db47230d2B9c', sym: 'WBTC' },
+};
+const MAX_UINT = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
+
+let provider, signer, factory, contract, userAddr, activeContractAddr;
+let countdownInterval, timeoutSecs = 30*86400;
+let currentLang = 'tr';
+
+const i18n = {
+  tr: {
+    subtitle:'dijital miras protokolü', connect:'cüzdan bağla',
+    eyebrow:'⬡ on-chain · aracısız · tam kontrol',
+    landingTitle:'Geleceğinizi Kodlayın, Varlıklarınızı Güvenceye Alın.',
+    landingDesc:'30 gün boyunca sisteme giriş yapmazsanız, tüm kripto varlıklarınız belirlediğiniz cüzdan adresine otomatik olarak aktarılır. Tamamen blokzincir üzerinde, aracı olmadan ve güvene dayalı kalmadan çalışır.',
+    newContract:'Yeni Sözleşme Oluştur', newContractDesc:'Yararlanıcınızı ve süreyi belirleyin, kişisel sözleşmenizi oluşturun.',
+    loadContract:'Mevcut Sözleşmeyi Yükle', loadContractDesc:'Daha önce oluşturduğunuz bir sözleşmeyi yönetin.',
+    oneTime:'tek seferlik kurulum', back:'geri',
+    setupDesc:'Sözleşme deploy edilince 0.00005 ETH platform ücreti alınır.',
+    whyHeading:'Neden DMK?',
+    whyBullet1:'— Aracı Yok: Banka, avukat veya mahkeme süreçleriyle uğraşmazsınız. Kod, kural neyse onu uygular.',
+    whyBullet2:'— Tam Kontrol: Özel anahtarınız asla sizden çıkmaz. Token\'larınız hayatta olduğunuz sürece tamamen size aittir.',
+    whyBullet3:'— Tek Seferlik Kurulum: Sözleşmeyi bir kez deploy etmeniz yeterlidir.',
+    beneficiaryGuideTitle:'Yararlanıcı (Mirasçı) Kılavuzu',
+    beneficiaryGuideDesc:'Size bırakılmış bir DMK sözleşmesi varsa, ne yapmanız gerektiğini buradan öğrenin.',
+    beneficiaryGuideSub:'Size bırakılmış bir DMK sözleşmesi varsa aşağıdaki adımları takip edin.',
+    gs1title:'Sözleşme adresini öğrenin', gs1desc:'Sözleşmeyi kuran kişi size bir adres bırakmış olmalı. Bu adres "0x..." ile başlar. Güvenli bir yerde saklayın.',
+    gs2title:'Sürenin dolmasını bekleyin', gs2desc:'Sahip sisteme giriş yapmayı bıraktıktan sonra belirlenen süre (genellikle 30 gün) dolmalıdır. Basescan\'da sözleşmeyi açıp "timeRemaining" ile kontrol edebilirsiniz.',
+    gs3title:'Cüzdanınızı bağlayın', gs3desc:'Sözleşmede kayıtlı yararlanıcı adresi sizin cüzdanınız olmalıdır. MetaMask veya uyumlu bir cüzdan ile bu siteye bağlanın.',
+    gs4title:'"Mevcut Sözleşmeyi Yükle" seçeneğini seçin', gs4desc:'Ana ekrandan "Mevcut Sözleşmeyi Yükle" seçeneğine tıklayın, sözleşme adresini girin ve yükleyin.',
+    gs5title:'Release All — fonları alın', gs5desc:'Panel ekranında "Yararlanıcı Çekimi" butonuna basın. ETH ve tüm token\'lar anında cüzdanınıza aktarılır. Bu işlem geri alınamaz.',
+    guideWarnTitle:'⚠ Dikkat', guideWarnBody:'Süre dolmadan "Release All" işlemini gerçekleştiremezsiniz — sözleşme reddeder. Gas ücreti için cüzdanınızda küçük miktarda ETH bulundurun.',
+    goToLoad:'📂 Sözleşmeyi Yükle',
+    riskTitle:'Güvenlik Analizi — This Is My Risk',
+    riskDesc:'Sözleşme güvenlik taraması bulguları ve neden gerçek bir tehdit oluşturmadıkları.',
+    riskSubtitle:'Sözleşme kodu Remix Static Analyzer ile taranmış ve manuel olarak incelenmiştir.', timeoutLabel2:'süre (gün)',
+    deployBtn:'🚀 Sözleşme Deploy Et (0.00005 ETH)',
+    loadDesc:'Cüzdanınıza bağlı sözleşmeleri otomatik bulur veya adres girerek yükleyin.',
+    manualAddr:'manuel adres girin', loadBtn:'📂 Sözleşmeyi Yükle',
+    yourContracts:'Sözleşmeleriniz', load:'yükle',
+    ethBalance:'ETH bakiye', inContract:'sözleşmede', timeLeft:'kalan süre',
+    pingPrompt:'giriş yap', gasSafety:'gas güvencesi',
+    lifeSignal:'⏱ yaşam sinyali', notConnected:'bağlanılmadı',
+    connectPrompt:'cüzdanı bağlayarak süreyi yükleyin',
+    pingBtn:'🫀 Sisteme Giriş Yap — Aktif Olduğunuzu Onaylayın',
+    mmWarnTitle:'MetaMask güvenlik uyarısı hakkında',
+    mmWarnBody:'Onay (approve) işlemi sırasında MetaMask bir uyarı gösterebilir. Bu uyarı yeni sözleşmelerde otomatik çıkar; güvensiz olduğu anlamına gelmez.',
+    mmCheck1:'Sözleşme kodu Sourcify ve Blockscout\'ta kamuya açık şekilde doğrulandı.',
+    mmCheck2:'Token\'larınız cüzdanınızda kalır — yalnızca süre dolduktan sonra aktarılabilir.',
+    mmCheck3:'Onayı (approve) istediğiniz zaman MetaMask üzerinden iptal edebilirsiniz.',
+    depositTitle:'💰 ETH Yatır', amount:'miktar', deposit:'yatır',
+    tokenTitle:'🔐 Token Yetkileri', tokenSub:'cüzdanınızda kalır', approveBtn:'onayla',
+    contractInfo:'📋 Sözleşme Bilgisi', address:'adres', owner:'sahip',
+    beneficiary:'yararlanıcı', timeoutLabel:'zaman aşımı', days:'gün', network:'ağ',
+    dangerTitle:'⚠ Acil İşlemler', withdrawBtn:'ETH\'yi Geri Çek', releaseBtn:'Yararlanıcı Çekimi',
+    logTitle:'📟 İşlem Geçmişi',
+    approved:'✓ onaylı', noApproval:'onay yok', active:'aktif', critical:'kritik',
+    expired:'süre doldu', safe:'✓ güvenli', unsafe:'✗ yetersiz',
+    remaining:'kaldı', expiredSub:'süre doldu!', lastPing:'son giriş',
+    sending:'İşlem gönderiliyor...', waiting:'Onay bekleniyor...',
+    pingSuccess:'✓ Giriş başarılı! Süre sıfırlandı.',
+    deploySuccess:'✓ Sözleşme oluşturuldu!', deployErr:'✗ Deploy hatası: ',
+    depositSuccess:'✓ ETH yatırıldı.', approveSuccess:'✓ Onay başarılı!',
+    withdrawConfirm:'ETH\'yi geri çekmek istediğinizden emin misiniz?',
+    withdrawSuccess:'✓ ETH geri çekildi.', releaseConfirm:'Tüm fonlar yararlanıcıya gönderilecek. Devam etmek istiyor musunuz?',
+    releaseSuccess:'✓ Fonlar yararlanıcıya gönderildi.',
+    connected:'Bağlandı: ', disconnected:'Bağlantı kesildi.',
+    noMetaMask:'MetaMask bulunamadı! Lütfen MetaMask yükleyin.',
+    networkErr:'Base Mainnet\'e geçilemedi: ', loadErr:'Veri yüklenemedi: ',
+    connErr:'Bağlantı hatası: ', validAmount:'Geçerli bir miktar girin.',
+    noContracts:'Bu cüzdana bağlı sözleşme bulunamadı.',
+    connectFirst:'Lütfen önce cüzdanınızı bağlayın.',
+    invalidAddr:'Lütfen geçerli bir sözleşme adresi girin.',
+    err:'✗ Hata: ',
+  },
+  en: {
+    subtitle:'decentralized inheritance protocol', connect:'connect wallet',
+    eyebrow:'⬡ on-chain · trustless · self-custody',
+    landingTitle:'Code Your Legacy. Secure Your Assets.',
+    landingDesc:'If you don\'t ping the system for 30 days, all your crypto assets are automatically transferred to your designated backup address. Fully on-chain, trustless, and automated.',
+    newContract:'Create New Contract', newContractDesc:'Set your beneficiary and timeout, deploy your personal contract.',
+    loadContract:'Load Existing Contract', loadContractDesc:'Manage a contract you previously created.',
+    oneTime:'one-time setup', back:'back',
+    setupDesc:'A 0.00005 ETH platform fee is charged when deploying.',
+    whyHeading:'Why DMK?',
+    whyBullet1:'— No Intermediaries: No banks, no lawyers, no courts. The code executes exactly as written.',
+    whyBullet2:'— Absolute Ownership: Your private keys never leave your possession. Your tokens remain yours until the very end.',
+    whyBullet3:'— One-Time Deployment: Set it up once on the blockchain, and it runs forever.',
+    beneficiaryGuideTitle:'Beneficiary Guide',
+    beneficiaryGuideDesc:'If a DMK contract was left for you, learn your next steps here.',
+    beneficiaryGuideSub:'If a DMK contract was left for you, follow the steps below.',
+    gs1title:'Get the contract address', gs1desc:'The person who set up the contract should have left you an address starting with "0x...". Keep it somewhere safe.',
+    gs2title:'Wait for the timeout to expire', gs2desc:'After the owner stops pinging, the set period (usually 30 days) must pass. You can check "timeRemaining" on Basescan.',
+    gs3title:'Connect your wallet', gs3desc:'The beneficiary address recorded in the contract must be your wallet. Connect with MetaMask or a compatible wallet.',
+    gs4title:'Select "Load Existing Contract"', gs4desc:'From the main screen, click "Load Existing Contract", enter the contract address and load it.',
+    gs5title:'Release All — claim your funds', gs5desc:'On the panel screen, press the "Beneficiary Release" button. ETH and all tokens transfer to your wallet instantly. This action is irreversible.',
+    guideWarnTitle:'⚠ Important', guideWarnBody:'You cannot call "Release All" before the timeout expires — the contract will reject it. Keep a small amount of ETH in your wallet to cover gas fees.',
+    goToLoad:'📂 Load Contract',
+    riskTitle:'Security Analysis — This Is My Risk',
+    riskDesc:'Smart contract security scan findings and why they pose no real threat.',
+    riskSubtitle:'Contract code was analyzed with Remix Static Analyzer and reviewed manually.', timeoutLabel2:'timeout (days)',
+    deployBtn:'🚀 Deploy Contract (0.00005 ETH)',
+    loadDesc:'Automatically finds contracts linked to your wallet, or enter an address manually.',
+    manualAddr:'enter address manually', loadBtn:'📂 Load Contract',
+    yourContracts:'Your contracts', load:'load',
+    ethBalance:'ETH balance', inContract:'in contract', timeLeft:'time remaining',
+    pingPrompt:'ping system', gasSafety:'gas safety',
+    lifeSignal:'⏱ life signal', notConnected:'not connected',
+    connectPrompt:'connect wallet to load timer',
+    pingBtn:'🫀 Ping System — Confirm You\'re Active',
+    mmWarnTitle:'About the MetaMask security warning',
+    mmWarnBody:'MetaMask may show a warning during the approve step. This appears automatically for new contracts — it does not mean the contract is unsafe.',
+    mmCheck1:'Contract code is publicly verified on Sourcify and Blockscout.',
+    mmCheck2:'Tokens stay in your wallet — only transferable after the timeout expires.',
+    mmCheck3:'You can revoke the approval at any time directly from MetaMask.',
+    depositTitle:'💰 Deposit ETH', amount:'amount', deposit:'deposit',
+    tokenTitle:'🔐 Token Approvals', tokenSub:'stays in your wallet', approveBtn:'approve',
+    contractInfo:'📋 Contract Info', address:'address', owner:'owner',
+    beneficiary:'beneficiary', timeoutLabel:'timeout', days:'days', network:'network',
+    dangerTitle:'⚠ Emergency Actions', withdrawBtn:'Withdraw ETH', releaseBtn:'Beneficiary Release',
+    logTitle:'📟 Transaction Log',
+    approved:'✓ approved', noApproval:'not approved', active:'active', critical:'critical',
+    expired:'expired', safe:'✓ safe', unsafe:'✗ insufficient',
+    remaining:'remaining', expiredSub:'expired!', lastPing:'last ping',
+    sending:'Sending transaction...', waiting:'Waiting for confirmation...',
+    pingSuccess:'✓ Ping successful! Timer reset.',
+    deploySuccess:'✓ Contract deployed!', deployErr:'✗ Deploy error: ',
+    depositSuccess:'✓ ETH deposited.', approveSuccess:'✓ Approval successful!',
+    withdrawConfirm:'Are you sure you want to withdraw ETH?',
+    withdrawSuccess:'✓ ETH withdrawn.', releaseConfirm:'All funds will be sent to the beneficiary. Continue?',
+    releaseSuccess:'✓ Funds sent to beneficiary.',
+    connected:'Connected: ', disconnected:'Wallet disconnected.',
+    noMetaMask:'MetaMask not found! Please install MetaMask.',
+    networkErr:'Could not switch to Base Mainnet: ', loadErr:'Failed to load data: ',
+    connErr:'Connection error: ', validAmount:'Please enter a valid amount.',
+    noContracts:'No contracts found for this wallet.',
+    connectFirst:'Please connect your wallet first.',
+    invalidAddr:'Please enter a valid contract address.',
+    err:'✗ Error: ',
+  }
+};
+
+function t(k){ return i18n[currentLang][k]||k; }
+function applyLang(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k=el.getAttribute('data-i18n');
+    if(i18n[currentLang][k]) el.textContent=i18n[currentLang][k];
+  });
+  document.getElementById('langBtn').textContent=currentLang==='tr'?'EN':'TR';
+  document.documentElement.lang=currentLang;
+  if(!userAddr) document.getElementById('connectLabel').textContent=t('connect');
+  else document.getElementById('connectLabel').textContent=shortAddr(userAddr);
+}
+function toggleLang(){ currentLang=currentLang==='tr'?'en':'tr'; applyLang(); }
+
+// ── SCREENS ───────────────────────────────────────────────
+function showRisk(){
+  ['screenLanding','screenSetup','screenLoad','screenPanel','screenBeneficiary'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('screenRisk').style.display='block';
+  showRiskLang(currentLang);
+}
+function showRiskLang(lang){
+  document.getElementById('riskContentTr').style.display = lang==='tr' ? 'block' : 'none';
+  document.getElementById('riskContentEn').style.display = lang==='en' ? 'block' : 'none';
+  document.getElementById('riskTrBtn').style.borderColor = lang==='tr' ? 'var(--accent)' : '';
+  document.getElementById('riskTrBtn').style.color = lang==='tr' ? 'var(--accent)' : '';
+  document.getElementById('riskEnBtn').style.borderColor = lang==='en' ? 'var(--accent)' : '';
+  document.getElementById('riskEnBtn').style.color = lang==='en' ? 'var(--accent)' : '';
+}
+function showBeneficiary(){
+  ['screenLanding','screenSetup','screenLoad','screenPanel'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('screenBeneficiary').style.display='block';
+}
+function showLanding(){
+  ['screenLanding','screenSetup','screenLoad','screenPanel','screenBeneficiary','screenRisk'].forEach(id=>{
+    document.getElementById(id).style.display=id==='screenLanding'?'block':'none';
+  });
+  clearInterval(countdownInterval); contract=null; activeContractAddr=null;
+}
+function showSetup(){
+  if(!userAddr){alert(t('connectFirst'));return;}
+  document.getElementById('screenLanding').style.display='none';
+  document.getElementById('screenSetup').style.display='block';
+  document.getElementById('deployBtn').disabled=false;
+}
+async function showLoad(){
+  if(!userAddr){alert(t('connectFirst'));return;}
+  document.getElementById('screenLanding').style.display='none';
+  document.getElementById('screenBeneficiary').style.display='none';
+  document.getElementById('screenLoad').style.display='block';
+  await loadUserContracts();
+}
+async function showPanel(contractAddr){
+  activeContractAddr=contractAddr;
+  ['screenLanding','screenSetup','screenLoad'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('screenPanel').style.display='block';
+  document.getElementById('activeContractLabel').textContent=shortAddr(contractAddr);
+  document.getElementById('contractAddrDisplay').textContent=contractAddr;
+  document.getElementById('explorerLinks').innerHTML=
+    `<a class="ext-link" href="https://basescan.org/address/${contractAddr}" target="_blank">↗ Basescan</a>
+     <a class="ext-link" href="https://base.blockscout.com/address/${contractAddr}" target="_blank">↗ Blockscout</a>`;
+  contract=new ethers.Contract(contractAddr,DMK_ABI,signer);
+  enablePanelButtons(); await refreshData();
+}
+
+// ── HELPERS ───────────────────────────────────────────────
+function log(msg,type=''){
+  const el=document.getElementById('txLog');
+  const init=document.getElementById('logInitMsg'); if(init) init.remove();
+  const d=document.createElement('div'); d.className='log-entry '+type;
+  d.textContent='['+new Date().toLocaleTimeString()+'] '+msg;
+  el.appendChild(d); el.scrollTop=el.scrollHeight;
+}
+function setStatus(id,msg,type){
+  const el=document.getElementById(id);
+  el.textContent=msg; el.className='status-msg show '+type;
+  if(type==='ok') setTimeout(()=>el.className='status-msg',4000);
+}
+function shortAddr(a){ return a.slice(0,6)+'...'+a.slice(-4); }
+function formatEth(wei){ return (Number(wei)/1e18).toFixed(4); }
+function formatTime(secs){
+  if(secs<=0) return '00:00:00';
+  const d=Math.floor(secs/86400),h=Math.floor((secs%86400)/3600),m=Math.floor((secs%3600)/60);
+  if(currentLang==='tr'){ if(d>0) return d+'g '+h+'sa '+m+'dk'; }
+  else { if(d>0) return d+'d '+h+'h '+m+'m'; }
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(Math.floor(secs%60)).padStart(2,'0');
+}
+function startCountdown(remaining,total){
+  clearInterval(countdownInterval); let secs=remaining;
+  function tick(){
+    const el=document.getElementById('timerDisplay');
+    el.textContent=formatTime(secs);
+    const pct=Math.max(0,(secs/total)*100);
+    const fill=document.getElementById('progressFill');
+    fill.style.width=pct+'%';
+    if(pct<20){
+      fill.style.background='var(--red)'; el.style.color='var(--red)';
+      el.style.filter='drop-shadow(0 0 28px rgba(255,71,87,0.35))';
+    } else if(pct<50){
+      fill.style.background='var(--orange)'; el.style.color='var(--orange)';
+      el.style.filter='drop-shadow(0 0 28px rgba(255,165,2,0.3))';
+    } else {
+      fill.style.background='linear-gradient(135deg,#4facfe,#00f2fe)'; el.style.color='var(--accent)';
+      el.style.filter='drop-shadow(0 0 30px rgba(0,242,254,0.3))';
+    }
+    if(secs>0) secs--;
+  }
+  tick(); countdownInterval=setInterval(tick,1000);
+}
+
+// ── WALLET ────────────────────────────────────────────────
+async function connectWallet(){
+  if(!window.ethereum){alert(t('noMetaMask'));return;}
+  try {
+    const accounts=await window.ethereum.request({method:'eth_requestAccounts'});
+    userAddr=accounts[0];
+    let chainId=await window.ethereum.request({method:'eth_chainId'});
+    if(chainId!==BASE_CHAIN){
+      try {
+        await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:BASE_CHAIN}]});
+        chainId=await window.ethereum.request({method:'eth_chainId'});
+      } catch(e){
+        log(t('networkErr')+e.message,'err');
+        alert(t('networkErr')+e.message);
+        return;
+      }
+    }
+    if(chainId!==BASE_CHAIN){
+      log('Base Mainnet\'e bağlanamadı.','err'); return;
+    }
+    provider=new ethers.BrowserProvider(window.ethereum);
+    signer=await provider.getSigner();
+    factory=new ethers.Contract(FACTORY_ADDRESS,FACTORY_ABI,signer);
+    document.getElementById('connectBtn').classList.add('connected');
+    document.getElementById('connDot').classList.add('green');
+    document.getElementById('connectLabel').textContent=shortAddr(userAddr);
+    document.getElementById('disconnectBtn').style.display='flex';
+    log(t('connected')+userAddr,'ok');
+    window.ethereum.on('accountsChanged',()=>location.reload());
+    window.ethereum.on('chainChanged',()=>location.reload());
+  } catch(e){ log(t('connErr')+e.message,'err'); alert(t('connErr')+e.message); }
+}
+function disconnectWallet(){
+  provider=null;signer=null;factory=null;contract=null;userAddr=null;activeContractAddr=null;
+  clearInterval(countdownInterval);
+  document.getElementById('connectBtn').classList.remove('connected');
+  document.getElementById('connDot').classList.remove('green');
+  document.getElementById('connectLabel').textContent=t('connect');
+  document.getElementById('disconnectBtn').style.display='none';
+  showLanding(); log(t('disconnected'),'');
+}
+
+// ── DEPLOY ────────────────────────────────────────────────
+async function deployNew(){
+  const benef=document.getElementById('setupBeneficiary').value.trim();
+  const days=document.getElementById('setupTimeout').value;
+  if(!benef||!benef.startsWith('0x')){setStatus('setupStatus',t('invalidAddr'),'err');return;}
+  setStatus('setupStatus',t('sending'),'loading');
+  try {
+    const tx=await factory.deployContract(benef,days,[],{value:DEPLOY_FEE});
+    log('Deploy tx: '+tx.hash,'info');
+    setStatus('setupStatus',t('waiting'),'loading');
+    const receipt=await tx.wait();
+    const iface=new ethers.Interface(FACTORY_ABI); let newAddr=null;
+    for(const l of receipt.logs){ try{ const p=iface.parseLog(l); if(p&&p.name==='ContractDeployed'){newAddr=p.args[1];break;} }catch(e){} }
+    log(t('deploySuccess')+' '+(newAddr||''),'ok');
+    setStatus('setupStatus',t('deploySuccess'),'ok');
+    if(newAddr) setTimeout(()=>showPanel(newAddr),1500);
+  } catch(e){ log('Deploy error: '+e.message,'err'); setStatus('setupStatus',t('deployErr')+(e.reason||e.message),'err'); }
+}
+
+// ── LOAD ──────────────────────────────────────────────────
+async function loadUserContracts(){
+  const list=document.getElementById('userContractsList'); list.innerHTML='';
+  try {
+    const contracts=await factory.getUserContracts(userAddr);
+    if(contracts.length===0){ list.innerHTML='<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">'+t('noContracts')+'</div>'; return; }
+    const title=document.createElement('div');
+    title.style.cssText='font-size:10px;font-weight:800;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;';
+    title.textContent=t('yourContracts'); list.appendChild(title);
+    contracts.forEach(addr=>{
+      const item=document.createElement('div'); item.className='contract-item';
+      item.innerHTML=`<div class="contract-addr-short">${shortAddr(addr)}</div>
+        <div class="contract-item-sub">${addr.slice(0,10)}...${addr.slice(-6)}</div>
+        <button class="action-btn" style="font-size:11px;padding:7px 14px;" onclick="showPanel('${addr}')">${t('load')}</button>`;
+      list.appendChild(item);
+    });
+  } catch(e){ list.innerHTML='<div style="font-size:12px;color:var(--red);">'+t('loadErr')+e.message+'</div>'; }
+}
+async function loadManual(){
+  const addr=document.getElementById('manualAddr').value.trim();
+  if(!addr||!addr.startsWith('0x')){setStatus('loadStatus',t('invalidAddr'),'err');return;}
+  setStatus('loadStatus',t('waiting'),'loading');
+  try {
+    const tc=new ethers.Contract(addr,DMK_ABI,provider); await tc.owner(); await showPanel(addr);
+  } catch(e){ setStatus('loadStatus',t('err')+(e.reason||e.message),'err'); }
+}
+
+// ── PANEL ─────────────────────────────────────────────────
+function enablePanelButtons(){
+  ['pingBtn','depositBtn','withdrawBtn','releaseBtn','usdcBtn','usdtBtn','wbtcBtn'].forEach(id=>document.getElementById(id).disabled=false);
+}
+async function refreshData(){
+  try {
+    const [ethBal,timeRem,gasSafe,ownerAddr,benefAddr,tout,lping]=await Promise.all([
+      contract.getETHBalance(),contract.timeRemaining(),contract.isGasSafe(),
+      contract.owner(),contract.beneficiary(),contract.timeout(),contract.lastPing(),
+    ]);
+    document.getElementById('ethBalance').textContent=formatEth(ethBal)+' ETH';
+    document.getElementById('ownerDisplay').textContent=shortAddr(ownerAddr);
+    document.getElementById('benefDisplay').textContent=shortAddr(benefAddr);
+    const toutDays=Math.round(Number(tout)/86400);
+    document.getElementById('timeoutDisplay').textContent=toutDays+' '+t('days');
+    timeoutSecs=Number(tout);
+    const remSecs=Number(timeRem);
+    document.getElementById('timeLeftStat').textContent=formatTime(remSecs);
+    document.getElementById('timeLeftStat').className='stat-value '+(remSecs<86400*7?'red':remSecs<86400*14?'orange':'green');
+    document.getElementById('timeLeftSub').textContent=remSecs===0?t('expiredSub'):t('remaining');
+    document.getElementById('gasSafeStat').textContent=gasSafe?t('safe'):t('unsafe');
+    document.getElementById('gasSafeStat').className='stat-value '+(gasSafe?'green':'red');
+    const badge=document.getElementById('pingBadge');
+    if(remSecs===0){badge.className='badge danger';badge.textContent=t('expired');}
+    else if(remSecs<86400*7){badge.className='badge warn';badge.textContent=t('critical');}
+    else{badge.className='badge safe';badge.textContent=t('active');}
+    const locale=currentLang==='tr'?'tr-TR':'en-US';
+    document.getElementById('timerSub').textContent=t('lastPing')+': '+new Date(Number(lping)*1000).toLocaleDateString(locale);
+    startCountdown(remSecs,timeoutSecs);
+    await checkAllowances(ownerAddr);
+  } catch(e){ log(t('loadErr')+e.message,'err'); }
+}
+async function checkAllowances(ownerAddr){
+  for(const [key,token] of Object.entries(TOKENS)){
+    try {
+      const tok=new ethers.Contract(token.addr,ERC20_ABI,provider);
+      const al=await tok.allowance(ownerAddr,activeContractAddr);
+      const el=document.getElementById(key+'Status');
+      if(BigInt(al)>0n){el.className='badge safe';el.textContent=t('approved');}
+      else{el.className='badge warn';el.textContent=t('noApproval');}
+    } catch(e){}
+  }
+}
+async function doPing(){
+  setStatus('pingStatus',t('sending'),'loading');
+  try {
+    const tx=await contract.ping(); log('Ping tx: '+tx.hash,'info');
+    setStatus('pingStatus',t('waiting'),'loading');
+    await tx.wait(); log('Ping ✓','ok'); setStatus('pingStatus',t('pingSuccess'),'ok'); await refreshData();
+  } catch(e){ log('Ping error: '+e.message,'err'); setStatus('pingStatus',t('err')+(e.reason||e.message),'err'); }
+}
+async function doDeposit(){
+  const amt=document.getElementById('depositAmount').value;
+  if(!amt||parseFloat(amt)<=0){setStatus('depositStatus',t('validAmount'),'err');return;}
+  setStatus('depositStatus',t('sending'),'loading');
+  try {
+    const tx=await contract.depositETH({value:ethers.parseEther(amt)}); log('Deposit tx: '+tx.hash,'info');
+    setStatus('depositStatus',t('waiting'),'loading'); await tx.wait();
+    log(amt+' ETH ✓','ok'); setStatus('depositStatus',amt+' ETH '+t('depositSuccess'),'ok'); await refreshData();
+  } catch(e){ log('Deposit error: '+e.message,'err'); setStatus('depositStatus',t('err')+(e.reason||e.message),'err'); }
+}
+async function approveToken(key){
+  const token=TOKENS[key]; setStatus('approveStatus',token.sym+' '+t('sending'),'loading');
+  try {
+    const tok=new ethers.Contract(token.addr,ERC20_ABI,signer);
+    const tx=await tok.approve(activeContractAddr,MAX_UINT); log(token.sym+' approve tx: '+tx.hash,'info');
+    await tx.wait(); log(token.sym+' approve ✓','ok');
+    setStatus('approveStatus','✓ '+token.sym+' '+t('approveSuccess'),'ok');
+    const el=document.getElementById(key+'Status'); el.className='badge safe'; el.textContent=t('approved');
+  } catch(e){ log(key+' approve error: '+e.message,'err'); setStatus('approveStatus',t('err')+(e.reason||e.message),'err'); }
+}
+async function doEmergencyWithdraw(){
+  if(!confirm(t('withdrawConfirm'))) return;
+  setStatus('dangerStatus',t('sending'),'loading');
+  try {
+    const tx=await contract.emergencyWithdrawETH(); log('EmergencyWithdraw tx: '+tx.hash,'info');
+    await tx.wait(); log('Withdraw ✓','ok'); setStatus('dangerStatus',t('withdrawSuccess'),'ok'); await refreshData();
+  } catch(e){ log('Withdraw error: '+e.message,'err'); setStatus('dangerStatus',t('err')+(e.reason||e.message),'err'); }
+}
+async function doRelease(){
+  if(!confirm(t('releaseConfirm'))) return;
+  setStatus('dangerStatus',t('sending'),'loading');
+  try {
+    const tx=await contract.releaseAll(); log('ReleaseAll tx: '+tx.hash,'info');
+    await tx.wait(); log('releaseAll ✓','ok'); setStatus('dangerStatus',t('releaseSuccess'),'ok'); await refreshData();
+  } catch(e){ log('Release error: '+e.message,'err'); setStatus('dangerStatus',t('err')+(e.reason||e.message),'err'); }
+}
+</script>
+</body>
+</html>
